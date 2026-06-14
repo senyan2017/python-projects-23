@@ -1,5 +1,14 @@
+import os
+import sys
+
+# Make the repo-root "common" package importable when run as `python main.py`
+# from inside this directory.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from common.menu import run_menu, MenuExit
+from common.storage import JSONStorage
 from todo_list import ToDoList
-import file_manager
+
 
 def display_tasks(todo_list):
     tasks = todo_list.list_tasks()
@@ -11,47 +20,47 @@ def display_tasks(todo_list):
         status = "✔" if task["completed"] else "✘"
         print(f"{idx + 1}. {task['description']} [{status}]")
 
+
 def main():
+    storage = JSONStorage("tasks.txt", base_dir=os.path.dirname(os.path.abspath(__file__)))
     todo_list = ToDoList()
-    todo_list.tasks = file_manager.load_tasks()  # Load tasks from file
+    todo_list.tasks = storage.load()  # Load tasks from file
 
-    while True:
-        print("\nTo-Do List Application")
-        print("1. View tasks")
-        print("2. Add a task")
-        print("3. Mark task as completed")
-        print("4. Delete a task")
-        print("5. Exit")
-        
-        choice = input("Enter your choice: ")
+    def add_task():
+        description = input("Enter task description: ")
+        todo_list.add_task(description)
+        storage.save(todo_list.tasks)
 
-        if choice == "1":
-            display_tasks(todo_list)
-        elif choice == "2":
-            description = input("Enter task description: ")
-            todo_list.add_task(description)
-            file_manager.save_tasks(todo_list.tasks)
-        elif choice == "3":
-            display_tasks(todo_list)
-            try:
-                task_index = int(input("Enter task number to mark as complete: ")) - 1
-                todo_list.mark_task_completed(task_index)
-                file_manager.save_tasks(todo_list.tasks)
-            except (ValueError, IndexError):
-                print("Invalid task number.")
-        elif choice == "4":
-            display_tasks(todo_list)
-            try:
-                task_index = int(input("Enter task number to delete: ")) - 1
-                todo_list.delete_task(task_index)
-                file_manager.save_tasks(todo_list.tasks)
-            except (ValueError, IndexError):
-                print("Invalid task number.")
-        elif choice == "5":
-            print("Exiting To-Do List Application. Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please try again.")
+    def complete_task():
+        display_tasks(todo_list)
+        try:
+            task_index = int(input("Enter task number to mark as complete: ")) - 1
+            todo_list.mark_task_completed(task_index)
+            storage.save(todo_list.tasks)
+        except (ValueError, IndexError):
+            print("Invalid task number.")
+
+    def delete_task():
+        display_tasks(todo_list)
+        try:
+            task_index = int(input("Enter task number to delete: ")) - 1
+            todo_list.delete_task(task_index)
+            storage.save(todo_list.tasks)
+        except (ValueError, IndexError):
+            print("Invalid task number.")
+
+    def exit_app():
+        print("Exiting To-Do List Application. Goodbye!")
+        raise MenuExit
+
+    run_menu("To-Do List Application", [
+        ("View tasks", lambda: display_tasks(todo_list)),
+        ("Add a task", add_task),
+        ("Mark task as completed", complete_task),
+        ("Delete a task", delete_task),
+        ("Exit", exit_app),
+    ])
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,14 @@
+import os
+import sys
+
+# Make the repo-root "common" package importable when run as `python main.py`
+# from inside this directory.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from common.menu import run_menu, MenuExit
+from common.storage import JSONStorage
 from expense_manager import ExpenseManager
-import file_manager
+
 
 def display_expenses(expense_manager):
     expenses = expense_manager.list_expenses()
@@ -10,6 +19,7 @@ def display_expenses(expense_manager):
     for idx, expense in enumerate(expenses, 1):
         print(f"{idx}. ${expense['amount']} - {expense['category']} - {expense['description']}")
 
+
 def display_summary(expense_manager):
     summary = expense_manager.get_summary()
     if not summary:
@@ -19,35 +29,35 @@ def display_summary(expense_manager):
     for category, total in summary.items():
         print(f"{category}: ${total:.2f}")
 
+
 def main():
+    storage = JSONStorage("expenses.txt", base_dir=os.path.dirname(os.path.abspath(__file__)))
     expense_manager = ExpenseManager()
-    expense_manager.expenses = file_manager.load_expenses()  # Load existing expenses
+    expense_manager.expenses = storage.load()  # Load existing expenses
 
-    while True:
-        print("\nPersonal Expense Tracker")
-        print("1. Add an expense")
-        print("2. View expenses")
-        print("3. View summary by category")
-        print("4. Exit")
-        
-        choice = input("Enter your choice: ")
-
-        if choice == "1":
+    def add_expense():
+        try:
             amount = float(input("Enter amount: "))
-            category = input("Enter category (e.g., Food, Transport): ")
-            description = input("Enter description: ")
-            expense_manager.add_expense(amount, category, description)
-            file_manager.save_expenses(expense_manager.expenses)
-            print("Expense added successfully!")
-        elif choice == "2":
-            display_expenses(expense_manager)
-        elif choice == "3":
-            display_summary(expense_manager)
-        elif choice == "4":
-            print("Exiting Expense Tracker. Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please try again.")
+        except ValueError:
+            print("Invalid amount. Please enter a number.")
+            return
+        category = input("Enter category (e.g., Food, Transport): ")
+        description = input("Enter description: ")
+        expense_manager.add_expense(amount, category, description)
+        storage.save(expense_manager.expenses)
+        print("Expense added successfully!")
+
+    def exit_app():
+        print("Exiting Expense Tracker. Goodbye!")
+        raise MenuExit
+
+    run_menu("Personal Expense Tracker", [
+        ("Add an expense", add_expense),
+        ("View expenses", lambda: display_expenses(expense_manager)),
+        ("View summary by category", lambda: display_summary(expense_manager)),
+        ("Exit", exit_app),
+    ])
+
 
 if __name__ == "__main__":
     main()

@@ -7,14 +7,16 @@ This is a command-line Personal Expense Tracker that allows users to:
 - View a summary of expenses categorized by type
 
 ## Files
-- `expense_tracker.py`: The main script to run the application.
+- `main.py`: The main script to run the application.
 - `expense_manager.py`: Contains the `ExpenseManager` class, which manages expense data.
-- `file_manager.py`: Handles file I/O for saving and loading expenses.
 - `expenses.txt`: Stores expense data persistently.
+
+File I/O and the menu loop are shared with the other CLI projects through
+the repo-level `common/` package (`common/storage.py`, `common/menu.py`).
 
 ## Usage
 Run the application by executing:
 ```bash
-python expense_tracker.py
+python main.py
 ```
 Follow the on-screen instructions to manage your expenses.

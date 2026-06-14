@@ -8,15 +8,17 @@ This is a simple command-line To-Do List application that allows users to:
 - Delete tasks
 
 ## Files
-- `todo.py`: The main script to run the application.
+- `main.py`: The main script to run the application.
 - `todo_list.py`: Contains the `ToDoList` class that manages task operations.
-- `file_manager.py`: Handles file I/O for saving and loading tasks.
 - `tasks.txt`: Stores tasks persistently.
+
+File I/O and the menu loop are shared with the other CLI projects through
+the repo-level `common/` package (`common/storage.py`, `common/menu.py`).
 
 ## Usage
 Run the application by executing:
 ```bash
-python todo.py
+python main.py
 
 
 ***Follow the on-screen instructions to manage your tasks.***
@@ -35,7 +37,7 @@ Since there are no third-party dependencies in this project, this file can be le
 To run the project, simply execute:
 
 ```bash
-python todo.py
+python main.py
 
 ``
 
