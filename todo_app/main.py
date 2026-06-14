@@ -1,5 +1,18 @@
+import sys
+import os
+
+# Allow importing the shared 'common' package from the repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from common import JsonStore, Menu, safe_int_input
 from todo_list import ToDoList
-import file_manager
+
+# Storage lives inside the todo_app directory
+store = JsonStore("tasks.json", data_dir=os.path.dirname(os.path.abspath(__file__)))
+
+MENU_TITLE = "To-Do List Application"
+MENU_CHOICES = ["View tasks", "Add a task", "Mark task as completed", "Delete a task"]
+
 
 def display_tasks(todo_list):
     tasks = todo_list.list_tasks()
@@ -7,51 +20,72 @@ def display_tasks(todo_list):
         print("No tasks found!")
         return
     print("\nTo-Do List:")
-    for idx, task in enumerate(tasks):
-        status = "✔" if task["completed"] else "✘"
-        print(f"{idx + 1}. {task['description']} [{status}]")
+    for idx, task in enumerate(tasks, 1):
+        status = "\u2714" if task["completed"] else "\u2718"
+        print(f"  {idx}. {task['description']} [{status}]")
+
+
+def view_tasks(todo_list):
+    display_tasks(todo_list)
+
+
+def add_task(todo_list):
+    description = input("Enter task description: ").strip()
+    if not description:
+        print("Task description cannot be empty.")
+        return
+    todo_list.add_task(description)
+    store.save(todo_list.tasks)
+    print("Task added.")
+
+
+def mark_completed(todo_list):
+    display_tasks(todo_list)
+    if not todo_list.tasks:
+        return
+    idx = safe_int_input("Enter task number to mark as complete: ")
+    if idx is None:
+        print("Invalid task number.")
+        return
+    idx -= 1
+    if 0 <= idx < len(todo_list.tasks):
+        todo_list.mark_task_completed(idx)
+        store.save(todo_list.tasks)
+        print("Task marked as completed.")
+    else:
+        print("Invalid task number.")
+
+
+def delete_task(todo_list):
+    display_tasks(todo_list)
+    if not todo_list.tasks:
+        return
+    idx = safe_int_input("Enter task number to delete: ")
+    if idx is None:
+        print("Invalid task number.")
+        return
+    idx -= 1
+    if 0 <= idx < len(todo_list.tasks):
+        todo_list.delete_task(idx)
+        store.save(todo_list.tasks)
+        print("Task deleted.")
+    else:
+        print("Invalid task number.")
+
 
 def main():
     todo_list = ToDoList()
-    todo_list.tasks = file_manager.load_tasks()  # Load tasks from file
+    todo_list.tasks = store.load()
 
-    while True:
-        print("\nTo-Do List Application")
-        print("1. View tasks")
-        print("2. Add a task")
-        print("3. Mark task as completed")
-        print("4. Delete a task")
-        print("5. Exit")
-        
-        choice = input("Enter your choice: ")
+    menu = Menu(MENU_TITLE, MENU_CHOICES)
+    handlers = [
+        lambda: view_tasks(todo_list),
+        lambda: add_task(todo_list),
+        lambda: mark_completed(todo_list),
+        lambda: delete_task(todo_list),
+    ]
+    menu.run(handlers)
 
-        if choice == "1":
-            display_tasks(todo_list)
-        elif choice == "2":
-            description = input("Enter task description: ")
-            todo_list.add_task(description)
-            file_manager.save_tasks(todo_list.tasks)
-        elif choice == "3":
-            display_tasks(todo_list)
-            try:
-                task_index = int(input("Enter task number to mark as complete: ")) - 1
-                todo_list.mark_task_completed(task_index)
-                file_manager.save_tasks(todo_list.tasks)
-            except (ValueError, IndexError):
-                print("Invalid task number.")
-        elif choice == "4":
-            display_tasks(todo_list)
-            try:
-                task_index = int(input("Enter task number to delete: ")) - 1
-                todo_list.delete_task(task_index)
-                file_manager.save_tasks(todo_list.tasks)
-            except (ValueError, IndexError):
-                print("Invalid task number.")
-        elif choice == "5":
-            print("Exiting To-Do List Application. Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please try again.")
 
 if __name__ == "__main__":
     main()
