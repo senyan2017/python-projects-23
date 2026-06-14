@@ -1,5 +1,6 @@
-from expense_manager import ExpenseManager
+from expense_manager import ExpenseManager, parse_amount
 import file_manager
+
 
 def display_expenses(expense_manager):
     expenses = expense_manager.list_expenses()
@@ -8,7 +9,8 @@ def display_expenses(expense_manager):
         return
     print("\nList of Expenses:")
     for idx, expense in enumerate(expenses, 1):
-        print(f"{idx}. ${expense['amount']} - {expense['category']} - {expense['description']}")
+        print(f"{idx}. ${expense['amount']:.2f} - {expense['category']} - {expense['description']}")
+
 
 def display_summary(expense_manager):
     summary = expense_manager.get_summary()
@@ -18,6 +20,7 @@ def display_summary(expense_manager):
     print("\nExpense Summary by Category:")
     for category, total in summary.items():
         print(f"{category}: ${total:.2f}")
+
 
 def main():
     expense_manager = ExpenseManager()
@@ -29,11 +32,15 @@ def main():
         print("2. View expenses")
         print("3. View summary by category")
         print("4. Exit")
-        
-        choice = input("Enter your choice: ")
+
+        choice = input("Enter your choice: ").strip()
 
         if choice == "1":
-            amount = float(input("Enter amount: "))
+            try:
+                amount = parse_amount(input("Enter amount: "))
+            except ValueError as exc:
+                print(exc)
+                continue
             category = input("Enter category (e.g., Food, Transport): ")
             description = input("Enter description: ")
             expense_manager.add_expense(amount, category, description)
@@ -48,6 +55,7 @@ def main():
             break
         else:
             print("Invalid choice. Please try again.")
+
 
 if __name__ == "__main__":
     main()
